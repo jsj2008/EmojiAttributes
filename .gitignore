@@ -1,0 +1,4 @@
+.theos
+obj
+layout/System/Library/PrivateFrameworks/TextInput.framework/*
+Experimental_*

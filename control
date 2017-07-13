@@ -1,0 +1,10 @@
+Package: com.ps.emojiattributes
+Name: EmojiAttributes
+Depends: mobilesubstrate, firmware (>= 6.0)
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: Fix Emoji Attributes.
+Maintainer: PoomSmart
+Author: PoomSmart
+Section: Tweaks
+Depiction: https://poomsmart.github.io/repo/emojiattributes/index.html
