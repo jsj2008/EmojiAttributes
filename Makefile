@@ -8,7 +8,7 @@ else
 	TARGET = iphone:clang:latest:6.0
 endif
 
-PACKAGE_VERSION = 1.3.0
+PACKAGE_VERSION = 1.3.1
 
 include $(THEOS)/makefiles/common.mk
 

@@ -2,10 +2,10 @@
 #import "../PS.h"
 #import "Assert.h"
 #import "WebCoreSupport/CharactersProperties.h"
-//#import "WebCoreSupport/ComplexText.h"
 #import "WebCoreSupport/Font.h"
 #import "WebCoreSupport/RenderText.h"
 #include <unicode/utf16.h>
+#import <CoreText/CoreText.h>
 
 using namespace WebCore;
 using namespace WTF;
@@ -133,7 +133,6 @@ bool (*isCJKIdeographOrSymbol)(UChar32);
 }
 
 String (*RenderText_originalText)(void *);
-
 int (*RenderText_previousOffsetForBackwardDeletion)(void *, int);
 %hookf(int, RenderText_previousOffsetForBackwardDeletion, void *arg0, int current) {
     String m_text = RenderText_originalText(arg0);
@@ -365,8 +364,7 @@ bool (*advanceByCombiningCharacterSequence)(const UChar *&, const UChar *, UChar
         UChar32 nextCharacter;
         unsigned markLength = 0;
         bool shouldContinue = false;
-        ASSERT(end >= iterator);
-        U16_NEXT(iterator, markLength, static_cast<unsigned>(end - iterator), nextCharacter);
+        U16_NEXT(iterator, markLength, end - iterator, nextCharacter);
         if (isVariationSelector(nextCharacter) || isEmojiFitzpatrickModifier(nextCharacter))
             shouldContinue = true;
         if (sawJoiner && isEmojiGroupCandidate(nextCharacter))
@@ -383,40 +381,6 @@ bool (*advanceByCombiningCharacterSequence)(const UChar *&, const UChar *, UChar
     }
     return true;
 }
-
-/*void (*complexText_ctor)(ComplexTextController::ComplexTextRun::ComplexTextRun *, const Font&, const UChar*, unsigned, size_t, bool);
-   %hookf(void, complexText_ctor, ComplexTextController::ComplexTextRun::ComplexTextRun *arg0, const Font& font, const UChar* characters, unsigned stringLocation, size_t stringLength, bool ltr)
-   {
-        arg0->m_font(font);
-        arg0->m_characters(characters);
-        arg0->m_stringLocation(stringLocation);
-        arg0->m_stringLength(stringLength);
-        arg0->m_indexBegin(0);
-        arg0->m_indexEnd(stringLength);
-        arg0->m_initialAdvance(CGSizeZero);
-        arg0->m_isLTR(ltr);
-        arg0->m_isMonotonic(true);
-        arg0->m_coreTextIndicesVector.reserveInitialCapacity(arg0->m_stringLength); // FIXME
-        unsigned r = 0;
-        while (r < m_stringLength) {
-                arg0->m_coreTextIndicesVector.uncheckedAppend(r); // FIXME
-                if (U_IS_LEAD(arg0->m_characters[r]) && r + 1 < m_stringLength && U_IS_TRAIL(arg0->m_characters[r + 1]))
-                        r += 2;
-                else
-                        r++;
-        }
-        arg0->m_glyphCount = arg0->m_coreTextIndicesVector.size();
-        if (!ltr) {
-                for (unsigned r = 0, end = m_glyphCount - 1; r < m_glyphCount / 2; ++r, --end)
-                        std::swap(arg0->m_coreTextIndicesVector[r], arg0->m_coreTextIndicesVector[end]);
-        }
-        arg0->m_coreTextIndices = arg0->m_coreTextIndicesVector.data(); // FIXME
-
-        arg0->m_glyphsVector.fill(0, arg0->m_glyphCount);
-        arg0->m_glyphs = arg0->m_glyphsVector.data();
-        arg0->m_advancesVector.fill(CGSizeMake(arg0->m_font.widthForGlyph(0), 0), arg0->m_glyphCount);
-        arg0->m_advances = arg0->m_advancesVector.data();
-   }*/
 
 %ctor {
     MSImageRef ref = MSGetImageByName(realPath2(@"/System/Library/PrivateFrameworks/WebCore.framework/WebCore"));
