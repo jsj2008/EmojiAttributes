@@ -525,7 +525,7 @@ static void logCharacterset(CFCharacterSetRef charset) {
             UTF32Char c;
             for (c = plane << 16; c < (plane + 1) << 16; c++) {
                 if (CFCharacterSetIsLongCharacterMember(charset, c)) {
-                    UTF32Char c1 = OSSwapHostToLittleInt32(c);                                                                                                                                                                                                                                                                                                             // To make it byte-order safe
+                    UTF32Char c1 = OSSwapHostToLittleInt32(c);
                     NSString *s = [[NSString alloc] initWithBytes:&c1 length:4 encoding:NSUTF32LittleEndianStringEncoding];
                     HBLogDebug(@"%@", s);
                 }
