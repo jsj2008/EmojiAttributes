@@ -34,5 +34,6 @@ always better to keep until it comes into play.
 All Bugs So Far
 =============
 
+* [iOS 5] Grouped emojis don't combine
 * [iOS 6] Grouped emojis may not be rendered correctly at the line break
 * [All] Profession emojis deletion issue

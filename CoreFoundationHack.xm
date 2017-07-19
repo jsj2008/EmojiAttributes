@@ -171,7 +171,7 @@ static CFRange _CFStringInlineBufferGetComposedRange(CFStringInlineBuffer *buffe
 }
 
 extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFIndex, CFStringCharacterClusterType);
-%hookf(CFRange, CFStringGetRangeOfCharacterClusterAtIndex, CFStringRef string, CFIndex charIndex, CFStringCharacterClusterType type){
+%hookf(CFRange, CFStringGetRangeOfCharacterClusterAtIndex, CFStringRef string, CFIndex charIndex, CFStringCharacterClusterType type) {
     CFRange range;
     CFIndex currentIndex;
     CFIndex length = CFStringGetLength(string);
@@ -286,7 +286,7 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
     while (currentIndex <= range.location) {
         character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex);
 
-        if ((character & 0x1FFFF0) == 0xF860) {                                                                                                                         // transcoding hint
+        if ((character & 0x1FFFF0) == 0xF860) { // transcoding hint
             otherIndex = currentIndex + __CFTranscodingHintLength[(character - 0xF860)] + 1;
             if (otherIndex >= (range.location + range.length)) {
                 if (otherIndex <= length) {
@@ -299,16 +299,15 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
         ++currentIndex;
     }
 
-
     // Regional flag
-    if ((range.length == 2) && __CFStringIsRegionalIndicatorAtIndex(&stringBuffer, range.location)) {                                                             // RI
+    if ((range.length == 2) && __CFStringIsRegionalIndicatorAtIndex(&stringBuffer, range.location)) { // RI
         // Extend backward
         currentIndex = range.location;
 
         while ((currentIndex > 1) && __CFStringIsRegionalIndicatorAtIndex(&stringBuffer, currentIndex - 2))
             currentIndex -= 2;
 
-        if ((range.location > currentIndex) && (0 != ((range.location - currentIndex) % 4))) {                                                                                                                         // currentIndex is the 2nd RI
+        if ((range.location > currentIndex) && (0 != ((range.location - currentIndex) % 4))) { // currentIndex is the 2nd RI
             range.location -= 2;
             range.length += 2;
         }
@@ -497,7 +496,7 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
         if ((ZERO_WIDTH_JOINER == character) || __CFStringIsFamilySequenceCluster(&stringBuffer, _CFStringInlineBufferGetComposedRange(&stringBuffer, currentIndex, type, bmpBitmap, csetType))) {
 
             if (ZERO_WIDTH_JOINER != character)
-                ++currentIndex;                                                                                                                                                                                                                     // move to the end of cluster
+                ++currentIndex; // move to the end of cluster
 
             while (((currentIndex + 1) < length) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex))) {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, currentIndex + 1, type, bmpBitmap, csetType);
@@ -516,25 +515,6 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
 
     return range;
 }
-
-#ifdef LOGGING
-
-static void logCharacterset(CFCharacterSetRef charset) {
-    for (int plane = 0; plane <= 16; plane++) {
-        if (CFCharacterSetHasMemberInPlane(charset, plane)) {
-            UTF32Char c;
-            for (c = plane << 16; c < (plane + 1) << 16; c++) {
-                if (CFCharacterSetIsLongCharacterMember(charset, c)) {
-                    UTF32Char c1 = OSSwapHostToLittleInt32(c);
-                    NSString *s = [[NSString alloc] initWithBytes:&c1 length:4 encoding:NSUTF32LittleEndianStringEncoding];
-                    HBLogDebug(@"%@", s);
-                }
-            }
-        }
-    }
-}
-
-#endif
 
 %ctor {
     %init;

@@ -1,5 +1,4 @@
-GO_EASY_ON_ME = 1
-DEBUG = 0
+PACKAGE_VERSION = 1.3.2
 
 ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:6.0
@@ -7,8 +6,6 @@ ifeq ($(SIMULATOR),1)
 else
 	TARGET = iphone:clang:latest:6.0
 endif
-
-PACKAGE_VERSION = 1.3.1
 
 include $(THEOS)/makefiles/common.mk
 
