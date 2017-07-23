@@ -1,10 +1,10 @@
-PACKAGE_VERSION = 1.3.2
+PACKAGE_VERSION = 1.3.3
 
 ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:6.0
 	ARCHS = x86_64 i386
 else
-	TARGET = iphone:clang:latest:6.0
+	TARGET = iphone:clang:latest:5.0
 endif
 
 include $(THEOS)/makefiles/common.mk
@@ -17,8 +17,8 @@ else
 endif
 EmojiAttributes_FILES = CharacterSet.xm WebCoreHack.xm CoreFoundationHack.xm TextInputHack.xm
 EmojiAttributes_CFLAGS = -std=c++11
-EmojiAttributes_FRAMEWORKS = JavaScriptCore
-EmojiAttributes_LIBRARIES = icucore substrate
+EmojiAttributes_EXTRA_FRAMEWORKS = CydiaSubstrate
+EmojiAttributes_LIBRARIES = icucore
 EmojiAttributes_USE_SUBSTRATE = 1
 
 ifneq ($(SIMULATOR),1)
