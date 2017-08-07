@@ -1,4 +1,3 @@
-#define USE_REAL_PATH
 #import "../PS.h"
 #import "Assert.h"
 #import "WebCoreSupport/CharactersProperties.h"
@@ -400,9 +399,9 @@ bool (*advanceByCombiningCharacterSequence)(const UChar *&, const UChar *, UChar
     if (characterRangeCodePath == NULL)
         characterRangeCodePath = (WebCore::FontCascade::CodePath (*)(const UChar *, unsigned))MSFindSymbol(ref, "__ZN7WebCore4Font22characterRangeCodePathEPKtj");
     HBLogDebug(@"Found characterRangeCodePath: %d", characterRangeCodePath != NULL);
-    #if __LP64__ || !TARGET_OS_SIMULATOR
+#if __LP64__ || !TARGET_OS_SIMULATOR
     advanceByCombiningCharacterSequence = (bool (*)(const UChar *&, const UChar *, UChar32&, unsigned&))MSFindSymbol(ref, "__ZN7WebCoreL35advanceByCombiningCharacterSequenceERPKtS1_RiRj"); // missing in iOS 5
     HBLogDebug(@"Found advanceByCombiningCharacterSequence: %d", advanceByCombiningCharacterSequence != NULL);
-    #endif
+#endif
     %init;
 }

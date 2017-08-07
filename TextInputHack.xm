@@ -1,4 +1,3 @@
-#define USE_REAL_PATH
 #import "../PS.h"
 #import <dlfcn.h>
 

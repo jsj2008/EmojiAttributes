@@ -399,7 +399,7 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
             }
         }
     }
-    #ifdef EXPERIMENTAL
+#ifdef EXPERIMENTAL
     else if (__CFStringIsProfessionModifierBaseCluster(&stringBuffer, range)) {
         CFIndex end = range.location + range.length - 1;
         if ((end + 1) < length) {
@@ -440,7 +440,7 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
             }
         }
     }
-    #endif
+#endif
     else {
         // range is zwj
         CFIndex end = range.location + range.length - 1;
