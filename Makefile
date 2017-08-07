@@ -1,4 +1,4 @@
-PACKAGE_VERSION = 1.3.4
+PACKAGE_VERSION = 1.3.5
 
 ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:6.0
@@ -13,7 +13,7 @@ ifeq ($(SIMULATOR),1)
 	TWEAK_NAME = EmojiAttributes
 else
 	LIBRARY_NAME = EmojiAttributes
-	EmojiAttributes_INSTALL_PATH = /Library/Application Support/EmojiAttributes
+	EmojiAttributes_INSTALL_PATH = /Library/MobileSubstrate/DynamicLibraries/EmojiAttributes
 endif
 EmojiAttributes_FILES = TextInputHack.xm CharacterSet.xm WebCoreHack.xm CoreFoundationHack.xm
 EmojiAttributes_CFLAGS = -std=c++11

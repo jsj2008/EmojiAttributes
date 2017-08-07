@@ -5,5 +5,5 @@
 
 %ctor {
     if (_isTarget(TargetTypeGUINoExtension, @[@"com.apple.mobilesms.compose", @"com.apple.MobileSMS.MessagesNotificationExtension", @"com.apple.WebKit.WebContent"]))
-        dlopen("/Library/Application Support/EmojiAttributes/EmojiAttributes.dylib", RTLD_LAZY);
+        dlopen("/Library/MobileSubstrate/DynamicLibraries/EmojiAttributes/EmojiAttributes.dylib", RTLD_LAZY);
 }
