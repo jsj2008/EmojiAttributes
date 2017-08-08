@@ -1,8 +1,4 @@
 {
-	CoreFoundationVersion = (
-		"690.10",
-		"1348.21"
-	);
 	Filter = {
 		Bundles = (
 			"com.apple.UIKit"

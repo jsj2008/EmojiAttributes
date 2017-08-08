@@ -205,6 +205,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetGenderModifierBaseCharacte
 }
 
 #ifdef EXPERIMENTAL
+
 static const CFCharacterSetInlineBuffer *__CFStringGetProfessionModifierBaseCharacterSet(void) {
     static CFCharacterSetInlineBuffer buffer;
     static dispatch_once_t initOnce;
@@ -352,8 +353,7 @@ static inline bool __CFStringIsProfessionModifier(UTF32Char character) {
             (character == 0x1F527) ||
             (character == 0x1F52C) ||
             (character == 0x1F680) ||
-            (character == 0x1F692)
-            );
+            (character == 0x1F692));
 }
 
 #endif
@@ -390,7 +390,7 @@ static inline bool __CFStringIsGenderModifierBaseCluster(CFStringInlineBuffer *b
 }
 
 #ifdef EXPERIMENTAL
-static inline bool __CFStringIsProfessionModifierBaseCluster(CFStringInlineBuffer *buffer, CFRange range) {
+static inline bool __CFStringIsProfessionBaseCluster(CFStringInlineBuffer *buffer, CFRange range) {
     UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
     UTF32Char baseCharacter = character;
     if (range.length > 1) {
@@ -410,15 +410,15 @@ static inline bool __CFStringIsGenderModifierCluster(CFStringInlineBuffer *buffe
     if ((range.length < 1) || (range.length > 2))
         return false;
     UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
-    return (__CFStringIsGenderModifier(character) && ((range.length == 1) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1))));     // Either modifier is alone or is followed by FEOF
+    return (__CFStringIsGenderModifier(character) && ((range.length == 1) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1)))); // Either modifier is alone or is followed by FEOF
 }
 
 #ifdef EXPERIMENTAL
 static inline bool __CFStringIsProfessionModifierCluster(CFStringInlineBuffer *buffer, CFRange range) {
-    if ((range.length < 1) || (range.length > 4))
+    if ((range.length < 1) || (range.length > 3))
         return false;
     UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
-    return (__CFStringIsBaseForProfessionModifier(character) && ((range.length == 1) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1))));     // Either modifier is alone or is followed by FEOF
+    return (__CFStringIsProfessionModifier(character) && ((range.length == 2) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1)))); // Either modifier is alone or is followed by FEOF
 }
 
 #endif
@@ -433,7 +433,7 @@ static inline bool __CFStringIsFamilySequenceBaseCharacterLow(UTF16Char characte
 
 static inline bool __CFStringIsFamilySequenceCluster(CFStringInlineBuffer *buffer, CFRange range) {
     UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
-    if (character == 0x2764 || character == 0xFE0F || character == 0x2640 || character == 0x2642)     // HEART or variant selector or gender selector
+    if (character == 0x2764 || character == 0xFE0F || character == 0x2640 || character == 0x2642) // HEART or variant selector or gender selector
         return true;
     if (range.length > 1) {
         if (__CFStringIsFamilySequenceBaseCharacterHigh(character) && __CFStringIsFamilySequenceBaseCharacterLow(CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1)))
