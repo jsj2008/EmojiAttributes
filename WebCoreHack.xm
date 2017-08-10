@@ -3,6 +3,7 @@
 #import "WebCoreSupport/CharactersProperties.h"
 #import "WebCoreSupport/Font.h"
 #import "WebCoreSupport/RenderText.h"
+#import "WebCoreSupport/CoreGraphicsSPI.h"
 #include <unicode/utf16.h>
 #import <CoreText/CoreText.h>
 
