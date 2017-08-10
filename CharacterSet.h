@@ -29,12 +29,6 @@ static CFCharacterSetRef ourSet = NULL;
 
 #else
 
-static NSCharacterSet *fixUpCharacterSet(NSCharacterSet *set) {
-    NSMutableCharacterSet *mutableSet = [set mutableCopy];
-    [mutableSet addCharactersInString:@"0️⃣1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣8️⃣9️⃣#️⃣*️⃣"];
-    return [mutableSet autorelease];
-}
-
 static CFCharacterSetRef ourLegacySet = NULL;
 
 #endif

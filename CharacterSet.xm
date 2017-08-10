@@ -17,7 +17,7 @@ CFCharacterSetRef (*CreateCharacterSetForFont)(CFStringRef const);
 #else
         if (ourLegacySet)
             return ourLegacySet;
-        return ourLegacySet = (CFCharacterSetRef)[fixUpCharacterSet([NSCharacterSet characterSetWithContentsOfFile:[[NSBundle bundleWithIdentifier:isiOS10Up ? @"com.apple.CoreEmoji" : @"com.apple.TextInput"] pathForResource:isiOS10Up ? @"emoji2" : @"TIUserDictionaryEmojiCharacterSet" ofType:@"bitmap"]]) retain];
+        return ourLegacySet = (CFCharacterSetRef)[[NSCharacterSet characterSetWithContentsOfFile:[[NSBundle bundleWithIdentifier:isiOS10Up ? @"com.apple.CoreEmoji" : @"com.apple.TextInput"] pathForResource:isiOS10Up ? @"emoji2" : @"TIUserDictionaryEmojiCharacterSet" ofType:@"bitmap"]] retain];
 #endif
     }
     return %orig;
