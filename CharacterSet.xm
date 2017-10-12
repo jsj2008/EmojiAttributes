@@ -1,5 +1,7 @@
 #import "CharacterSet.h"
 
+CFStringRef iOS111Emojis = CFSTR("🤩🤨🤯🤪🤬🤮🤫🤭🧐🧒🧑🧓🧕🧔🤱🧙‍♀️🧙‍♂️🧚‍♀️🧚‍♂️🧛‍♀️🧛‍♂️🧜‍♀️🧜‍♂️🧝‍♀️🧝‍♂️🧞‍♀️🧞‍♂️🧟‍♀️🧟‍♂️🧖‍♀️🧖‍♂️🧗‍♀️🧗‍♂️🧘‍♀️🧘‍♂️🤟🤲🧠🧡🧣🧤🧥🧦🧢🦓🦒🦔🦕🦖🦗🥥🥦🥨🥩🥪🥣🥫🥟🥠🥡🥧🥤🥢🛸🛷🥌🏴󠁧󠁢󠁥󠁮󠁧󠁿🏴󠁧󠁢󠁳󠁣󠁴󠁿🏴󠁧󠁢󠁷󠁬󠁳󠁿");
+
 CFCharacterSetRef (*CreateCharacterSetForFont)(CFStringRef const);
 %hookf(CFCharacterSetRef, CreateCharacterSetForFont, CFStringRef const fontName) {
     if (CFEqual(fontName, CFSTR("AppleColorEmoji")) || CFEqual(fontName, CFSTR(".AppleColorEmojiUI"))) {
@@ -15,8 +17,11 @@ CFCharacterSetRef (*CreateCharacterSetForFont)(CFStringRef const);
 #else
         CFDataRef legacyUncompressedData = (CFDataRef)dataFromHexString(uncompressedSet);
         CFCharacterSetRef ourLegacySet = CFCharacterSetCreateWithBitmapRepresentation(kCFAllocatorDefault, legacyUncompressedData);
+        CFMutableCharacterSetRef mutableLegacySet = CFCharacterSetCreateMutableCopy(kCFAllocatorDefault, ourLegacySet);
+        CFCharacterSetAddCharactersInString(mutableLegacySet, iOS111Emojis);
+        CFRelease(ourLegacySet);
         CFRelease(legacyUncompressedData);
-        return ourLegacySet;
+        return mutableLegacySet;
 #endif
     }
     return %orig;

@@ -198,6 +198,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetGenderModifierBaseCharacte
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F926, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F937, 3));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F93C, 3));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F9D6, 1));
         CFCharacterSetCompact(cset);
         CFCharacterSetInitInlineBuffer(cset, &buffer);
     });
@@ -223,6 +224,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetProfessionModifierBaseChar
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F527, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F52C, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3A8, 1));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F692, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2708, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F680, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2696, 1));
@@ -269,6 +271,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetFitzpatrickModifierBaseCha
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F6A3, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F6B4, 3));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F6C0, 1));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F6CC, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F910, 0x1F916 - 0x1F910));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F917, 8));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F926, 1));
@@ -276,6 +279,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetFitzpatrickModifierBaseCha
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F933, 4));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F937, 3));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F93C, 3));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F9D1, 0xD));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x26F9, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3CB, 1));
         CFCharacterSetCompact(cset);
