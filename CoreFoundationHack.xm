@@ -1,3 +1,4 @@
+#import "../PS.h"
 #import <CoreFoundation/CoreFoundation.h>
 #import "CoreFoundationHack.h"
 #import <substrate.h>
@@ -169,6 +170,8 @@ static CFRange _CFStringInlineBufferGetComposedRange(CFStringInlineBuffer *buffe
 
     return CFRangeMake(start, end - start);
 }
+
+%group preiOS10_2
 
 extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFIndex, CFStringCharacterClusterType);
 %hookf(CFRange, CFStringGetRangeOfCharacterClusterAtIndex, CFStringRef string, CFIndex charIndex, CFStringCharacterClusterType type) {
@@ -516,6 +519,32 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
     return range;
 }
 
+%end
+
+bool (*CFStringIsGenderModifierBaseCluster)(CFStringInlineBuffer *, CFRange);
+bool (*CFStringIsBaseForFitzpatrickModifiers)(UTF32Char);
+
+%group iOS10_2
+
+%hookf(bool, CFStringIsGenderModifierBaseCluster, CFStringInlineBuffer *buffer, CFRange range) {
+    return __CFStringIsGenderModifierBaseCluster(buffer, range);
+}
+
+%hookf(bool, CFStringIsBaseForFitzpatrickModifiers, UTF32Char character) {
+    return __CFStringIsBaseForFitzpatrickModifiers(character);
+}
+
+%end
+
 %ctor {
-    %init;
+    if (isiOS10_2Up) {
+        MSImageRef ref = MSGetImageByName(realPath2(@"/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"));
+        CFStringIsGenderModifierBaseCluster = (bool (*)(CFStringInlineBuffer *, CFRange))MSFindSymbol(ref, "___CFStringIsGenderModifierBaseCluster");
+        HBLogDebug(@"Found CFStringIsGenderModifierBaseCluster: %d", CFStringIsGenderModifierBaseCluster != NULL);
+        CFStringIsBaseForFitzpatrickModifiers = (bool (*)(UTF32Char))MSFindSymbol(ref, "___CFStringIsBaseForFitzpatrickModifiers");
+        HBLogDebug(@"Found CFStringIsBaseForFitzpatrickModifiers: %d", CFStringIsBaseForFitzpatrickModifiers != NULL);
+        %init(iOS10_2);
+    } else {
+        %init(preiOS10_2);
+    }
 }

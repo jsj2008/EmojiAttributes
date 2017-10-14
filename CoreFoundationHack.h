@@ -198,7 +198,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetGenderModifierBaseCharacte
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F926, 1));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F937, 3));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F93C, 3));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F9D6, 1));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F9D6, 10));
         CFCharacterSetCompact(cset);
         CFCharacterSetInitInlineBuffer(cset, &buffer);
     });
@@ -275,7 +275,7 @@ static const CFCharacterSetInlineBuffer *__CFStringGetFitzpatrickModifierBaseCha
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F910, 0x1F916 - 0x1F910));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F917, 8));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F926, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F930, 1));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F930, 3));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F933, 4));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F937, 3));
         CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F93C, 3));
