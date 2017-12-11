@@ -383,6 +383,8 @@ bool (*advanceByCombiningCharacterSequence)(const UChar *&, const UChar *, UChar
 }
 
 %ctor {
+    if (isiOS10_2Up)
+        return;
     MSImageRef ref = MSGetImageByName(realPath2(@"/System/Library/PrivateFrameworks/WebCore.framework/WebCore"));
     isCJKIdeograph = (bool (*)(UChar32))MSFindSymbol(ref, "__ZN7WebCore11FontCascade14isCJKIdeographEi");
     if (isCJKIdeograph == NULL)

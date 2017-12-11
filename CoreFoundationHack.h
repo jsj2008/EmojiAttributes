@@ -1,4 +1,3 @@
-#define EXPERIMENTAL
 #import <CoreFoundation/CoreFoundation.h>
 
 #if defined(__BIG_ENDIAN__)
@@ -15,6 +14,8 @@
 #define CF_IS_OBJC(typeID, obj) (1)
 
 #define CF_IS_SWIFT(type, obj) (0)
+
+#define WHITE_SPACE_CHARACTER (0x0020)
 
 enum {
     _kCFRuntimeNotATypeID = 0
@@ -205,36 +206,33 @@ static const CFCharacterSetInlineBuffer *__CFStringGetGenderModifierBaseCharacte
     return (const CFCharacterSetInlineBuffer *)&buffer;
 }
 
-#ifdef EXPERIMENTAL
-
 static const CFCharacterSetInlineBuffer *__CFStringGetProfessionModifierBaseCharacterSet(void) {
     static CFCharacterSetInlineBuffer buffer;
     static dispatch_once_t initOnce;
     dispatch_once(&initOnce, ^{
+        /* Unicode 9.0 - Supported profession modifiers */
         CFMutableCharacterSetRef cset = CFCharacterSetCreateMutable(NULL);
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2695, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F33E, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F373, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F393, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3A4, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3EB, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3ED, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F4BB, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F4BC, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F527, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F52C, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3A8, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F692, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2708, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F680, 1));
-        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2696, 1));
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2695, 1)); // ⚕U+2695 STAFF OF AESCULAPIUS // Health Worker - 0x2695
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F33E, 1)); // 🌾U+1F33E EAR OF RICE // Farmer - 0xD83C 0xDF3E
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F373, 1)); // 🍳U+1F373 COOKING // Cook - 0xD83C 0xDF73
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F393, 1)); // 🎓U+1F393 GRADUATION CAP // Student - 0xD83C 0xDF93
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3A4, 1)); // 🎤U+1F3A4 MICROPHONE // Singer - 0xD83C 0xDFA4
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3EB, 1)); // 🏫U+1F3EB SCHOOL // Teacher - 0xD83C 0xDFEB
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3ED, 1)); // 🏭U+1F3ED FACTORY // Factory Worker - 0xD83C 0XDFED
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F4BB, 1)); // 💻U+1F4BB PERSONAL COMPUTER // Technologist - 0xD83D 0xDCBB
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F4BC, 1)); // 💼U+1F4BC BRIEFCASE // Office Worker - 0xD83D 0xDCBC
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F527, 1)); // 🔧U+1F527 WRENCH // Mechanic - 0xD83D 0xDD27
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F52C, 1)); // 🔬U+1F52C MICROSCOPE // Scientist - 0xD83D 0xDD2C
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F3A8, 1)); // 🎨U+1F3A8 ARTIST PALETTE // Artist - 0xD83C 0xDFA8
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F692, 1)); // 🚒U+1F692 FIRE ENGINE // Firefighter - 0xD83D 0xDE92
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2708, 1)); // ✈️U+2708 AIRPLANE // Pilot - 0x2708
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x1F680, 1)); // 🚀U+1F680 ROCKET // Astronaut - 0xD83D 0xDE80
+        CFCharacterSetAddCharactersInRange(cset, CFRangeMake(0x2696, 1)); // ⚖️U+2696 SCALES // Judge - 0x2696
         CFCharacterSetCompact(cset);
         CFCharacterSetInitInlineBuffer(cset, &buffer);
     });
     return (const CFCharacterSetInlineBuffer *)&buffer;
 }
-
-#endif
 
 static const CFCharacterSetInlineBuffer *__CFStringGetFitzpatrickModifierBaseCharacterSet(void) {
     static CFCharacterSetInlineBuffer buffer;
@@ -340,44 +338,12 @@ static inline bool __CFStringIsGenderModifier(UTF32Char character) {
     return ((character == 0x2640) || (character == 0x2642));
 }
 
-#ifdef EXPERIMENTAL
-static inline bool __CFStringIsProfessionModifier(UTF32Char character) {
-    return ((character == 0x2695) ||
-            (character == 0x2696) ||
-            (character == 0x2708) ||
-            (character == 0x1F33E) ||
-            (character == 0x1F373) ||
-            (character == 0x1F393) ||
-            (character == 0x1F3A4) ||
-            (character == 0x1F3A8) ||
-            (character == 0x1F3EB) ||
-            (character == 0x1F3ED) ||
-            (character == 0x1F4BB) ||
-            (character == 0x1F4BC) ||
-            (character == 0x1F527) ||
-            (character == 0x1F52C) ||
-            (character == 0x1F680) ||
-            (character == 0x1F692));
-}
-
-#endif
-
 static inline bool __CFStringIsBaseForGenderModifier(UTF32Char character) {
     if (((character >= 0x2600) && (character < 0x3000)) || ((character >= 0x1F300) && (character < 0x1FA00))) { // Misc symbols, dingbats, & emoticons
         return CFCharacterSetInlineBufferIsLongCharacterMember(__CFStringGetGenderModifierBaseCharacterSet(), character);
     }
     return false;
 }
-
-#ifdef EXPERIMENTAL
-static inline bool __CFStringIsBaseForProfessionModifier(UTF32Char character) {
-    if ((character < 0x3000) || (character <= 0x1F9FF)) {
-        return CFCharacterSetInlineBufferIsLongCharacterMember(__CFStringGetProfessionModifierBaseCharacterSet(), character);
-    }
-    return false;
-}
-
-#endif
 
 static inline bool __CFStringIsGenderModifierBaseCluster(CFStringInlineBuffer *buffer, CFRange range) {
     UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
@@ -393,8 +359,38 @@ static inline bool __CFStringIsGenderModifierBaseCluster(CFStringInlineBuffer *b
     return __CFStringIsBaseForGenderModifier(baseCharacter);
 }
 
-#ifdef EXPERIMENTAL
+static inline bool __CFStringIsGenderModifierCluster(CFStringInlineBuffer *buffer, CFRange range) {
+    if ((range.length < 1) || (range.length > 2))
+        return false;
+    UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
+    return (__CFStringIsGenderModifier(character) && ((range.length == 1) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1)))); // Either modifier is alone or is followed by FEOF
+}
+
+static inline bool __CFStringIsBaseForManOrWomanCluster(UTF16Char character) {
+    return ((character == 0xDC68) || (character == 0xDC69)); // Low surrogate chars representing MAN (U+1F468) and WOMAN (U+1F469) respectively
+}
+
 static inline bool __CFStringIsProfessionBaseCluster(CFStringInlineBuffer *buffer, CFRange range) {
+    if (range.length > 1) {
+        UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
+        if (CFUniCharIsSurrogateHighCharacter(character)) {
+            UTF16Char otherCharacter = CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1);
+            if (CFUniCharIsSurrogateLowCharacter(otherCharacter)) {
+                return __CFStringIsBaseForManOrWomanCluster(otherCharacter);
+            }
+        }
+    }
+    return false;
+}
+
+static inline bool __CFStringIsBaseForProfessionModifier(UTF32Char character) {
+    if (((character >= 0x2600) && (character < 0x3000)) || ((character >= 0x1F300) && (character < 0x1FA00))) { // Misc symbols, dingbats, & emoticons
+        return CFCharacterSetInlineBufferIsLongCharacterMember(__CFStringGetProfessionModifierBaseCharacterSet(), character);
+    }
+    return false;
+}
+
+static inline bool __CFStringIsProfessionModifierCluster(CFStringInlineBuffer *buffer, CFRange range) {
     UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
     UTF32Char baseCharacter = character;
     if (range.length > 1) {
@@ -407,25 +403,6 @@ static inline bool __CFStringIsProfessionBaseCluster(CFStringInlineBuffer *buffe
     }
     return __CFStringIsBaseForProfessionModifier(baseCharacter);
 }
-
-#endif
-
-static inline bool __CFStringIsGenderModifierCluster(CFStringInlineBuffer *buffer, CFRange range) {
-    if ((range.length < 1) || (range.length > 2))
-        return false;
-    UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
-    return (__CFStringIsGenderModifier(character) && ((range.length == 1) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1)))); // Either modifier is alone or is followed by FEOF
-}
-
-#ifdef EXPERIMENTAL
-static inline bool __CFStringIsProfessionModifierCluster(CFStringInlineBuffer *buffer, CFRange range) {
-    if ((range.length < 1) || (range.length > 3))
-        return false;
-    UTF16Char character = CFStringGetCharacterFromInlineBuffer(buffer, range.location);
-    return (__CFStringIsProfessionModifier(character) && ((range.length == 2) || (0xFE0F == CFStringGetCharacterFromInlineBuffer(buffer, range.location + 1)))); // Either modifier is alone or is followed by FEOF
-}
-
-#endif
 
 static inline bool __CFStringIsFamilySequenceBaseCharacterHigh(UTF16Char character) {
     return (character == 0xD83D) ? true : false;

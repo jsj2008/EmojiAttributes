@@ -186,24 +186,26 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
     UTF32Char character;
     UTF16Char otherSurrogate;
 
-    if (charIndex >= length)
-        return CFRangeMake(kCFNotFound, 0);
+    if (charIndex >= length) return CFRangeMake(kCFNotFound, 0);
 
-    if (!CF_IS_OBJC(__kCFStringTypeID, string) && !CF_IS_SWIFT(__kCFStringTypeID, string) && __CFStrIsEightBit(string))
-        return CFRangeMake(charIndex, 1);
+    /* Fast case.  If we're eight-bit, it's either the default encoding is cheap or the content is all ASCII.  Watch out when (or if) adding more 8bit Mac-scripts in CFStringEncodingConverters
+    */
+    if (!CF_IS_OBJC(__kCFStringTypeID, string) && !CF_IS_SWIFT(__kCFStringTypeID, string) && __CFStrIsEightBit(string)) return CFRangeMake(charIndex, 1);
 
     bmpBitmap = CFUniCharGetBitmapPtrForPlane(csetType, 0);
     letterBMP = CFUniCharGetBitmapPtrForPlane(kCFUniCharLetterCharacterSet, 0);
-    if (NULL == combClassBMP)
-        combClassBMP = (const uint8_t *)CFUniCharGetUnicodePropertyDataForPlane(kCFUniCharCombiningProperty, 0);
+    if (NULL == combClassBMP) combClassBMP = (const uint8_t *)CFUniCharGetUnicodePropertyDataForPlane(kCFUniCharCombiningProperty, 0);
 
     CFStringInitInlineBuffer(string, &stringBuffer, CFRangeMake(0, length));
 
+    // Get composed character sequence first
     range = _CFStringInlineBufferGetComposedRange(&stringBuffer, charIndex, type, bmpBitmap, csetType);
 
+    // Do grapheme joiners
     if (type < kCFStringCursorMovementCluster) {
         const uint8_t *letter = letterBMP;
 
+        // Check to see if we have a letter at the beginning of initial cluster
         character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, range.location);
 
         if ((range.length > 1) && CFUniCharIsSurrogateHighCharacter(character) && CFUniCharIsSurrogateLowCharacter((otherSurrogate = CFStringGetCharacterFromInlineBuffer(&stringBuffer, range.location + 1)))) {
@@ -214,21 +216,23 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
         if ((character == ZERO_WIDTH_JOINER) || CFUniCharIsMemberOfBitmap(character, letter)) {
             CFRange otherRange;
 
+            // Check if preceded by grapheme joiners (U034F and viramas)
             otherRange.location = currentIndex = range.location;
 
             while (currentIndex > 1) {
                 character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, --currentIndex);
-
+    
+                // ??? We're assuming viramas only in BMP
                 if ((_CFStringIsVirama(character, combClassBMP) || ((character == ZERO_WIDTH_JOINER) && _CFStringIsVirama(CFStringGetCharacterFromInlineBuffer(&stringBuffer, --currentIndex), combClassBMP))) && (currentIndex > 0)) {
-                    --currentIndex;
+                    --currentIndex;                
                 } else {
                     break;
                 }
 
                 currentIndex = _CFStringInlineBufferGetComposedRange(&stringBuffer, currentIndex, type, bmpBitmap, csetType).location;
-
+    
                 character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex);
-
+    
                 if (CFUniCharIsSurrogateLowCharacter(character) && CFUniCharIsSurrogateHighCharacter((otherSurrogate = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1)))) {
                     character = CFUniCharGetLongCharacterForSurrogatePair(character, otherSurrogate);
                     letter = CFUniCharGetBitmapPtrForPlane(kCFUniCharLetterCharacterSet, (character >> 16));
@@ -237,8 +241,7 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                     letter = letterBMP;
                 }
 
-                if (!CFUniCharIsMemberOfBitmap(character, letter))
-                    break;
+                if (!CFUniCharIsMemberOfBitmap(character, letter)) break;
                 range.location = currentIndex;
             }
 
@@ -253,13 +256,11 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                     character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1);
 
                     // ??? We're assuming viramas only in BMP
-                    if ((character != ZERO_WIDTH_JOINER) && !_CFStringIsVirama(character, combClassBMP))
-                        break;
+                    if ((character != ZERO_WIDTH_JOINER) && !_CFStringIsVirama(character, combClassBMP)) break;
 
                     character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex);
 
-                    if (character == ZERO_WIDTH_JOINER)
-                        character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, ++currentIndex);
+                    if (character == ZERO_WIDTH_JOINER) character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, ++currentIndex);
 
                     if (CFUniCharIsSurrogateHighCharacter(character) && CFUniCharIsSurrogateLowCharacter((otherSurrogate = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex + 1)))) {
                         character = CFUniCharGetLongCharacterForSurrogatePair(character, otherSurrogate);
@@ -267,10 +268,9 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                     } else {
                         letter = letterBMP;
                     }
-
+        
                     // We only conjoin letters
-                    if (!CFUniCharIsMemberOfBitmap(character, letter))
-                        break;
+                    if (!CFUniCharIsMemberOfBitmap(character, letter)) break;
                     otherRange = _CFStringInlineBufferGetComposedRange(&stringBuffer, currentIndex, type, bmpBitmap, csetType);
                     currentIndex = otherRange.location + otherRange.length;
                 } while ((otherRange.location + otherRange.length) < length);
@@ -281,14 +281,13 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
 
     // Check if we're part of prefix transcoding hints
     CFIndex otherIndex;
-
+    
     currentIndex = (range.location + range.length) - (MAX_TRANSCODING_LENGTH + 1);
-    if (currentIndex < 0)
-        currentIndex = 0;
-
+    if (currentIndex < 0) currentIndex = 0;
+    
     while (currentIndex <= range.location) {
         character = CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex);
-
+        
         if ((character & 0x1FFFF0) == 0xF860) { // transcoding hint
             otherIndex = currentIndex + __CFTranscodingHintLength[(character - 0xF860)] + 1;
             if (otherIndex >= (range.location + range.length)) {
@@ -304,12 +303,12 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
 
     // Regional flag
     if ((range.length == 2) && __CFStringIsRegionalIndicatorAtIndex(&stringBuffer, range.location)) { // RI
+
         // Extend backward
         currentIndex = range.location;
-
-        while ((currentIndex > 1) && __CFStringIsRegionalIndicatorAtIndex(&stringBuffer, currentIndex - 2))
-            currentIndex -= 2;
-
+        
+        while ((currentIndex > 1) && __CFStringIsRegionalIndicatorAtIndex(&stringBuffer, currentIndex - 2)) currentIndex -= 2;
+        
         if ((range.location > currentIndex) && (0 != ((range.location - currentIndex) % 4))) { // currentIndex is the 2nd RI
             range.location -= 2;
             range.length += 2;
@@ -331,26 +330,19 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                 end++;
                 endCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, end);
             }
-            if (endCharacter == ZERO_WIDTH_JOINER) {
+            if (endCharacter == ZERO_WIDTH_JOINER)  {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, end + 1, type, bmpBitmap, csetType);
                 if (__CFStringIsRainbowCluster(&stringBuffer, aCluster)) {
                     currentIndex = aCluster.location + aCluster.length;
-                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1)))
-                        --currentIndex;
+                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1))) --currentIndex;
                 }
-                if (currentIndex > (range.location + range.length))
-                    range.length = currentIndex - range.location;
+                if (currentIndex > (range.location + range.length)) range.length = currentIndex - range.location;
             }
         }
     } else if (__CFStringIsRainbowCluster(&stringBuffer, range)) {
         if (range.location > 1) {
             CFIndex prev = range.location - 1;
             UTF32Char prevCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, prev);
-            // if prevChar is still not zwj, try again
-            if ((prevCharacter != ZERO_WIDTH_JOINER) && (prev > 1)) {
-                prev--;
-                prevCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, prev);
-            }
             if (prevCharacter == ZERO_WIDTH_JOINER) {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, prev - 1, type, bmpBitmap, csetType);
                 if (__CFStringIsWavingWhiteFlagCluster(&stringBuffer, aCluster)) {
@@ -370,26 +362,19 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                 end++;
                 endCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, end);
             }
-            if (endCharacter == ZERO_WIDTH_JOINER) {
+            if (endCharacter == ZERO_WIDTH_JOINER)  {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, end + 1, type, bmpBitmap, csetType);
                 if (__CFStringIsGenderModifierCluster(&stringBuffer, aCluster)) {
                     currentIndex = aCluster.location + aCluster.length;
-                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1)))
-                        --currentIndex;
+                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1))) --currentIndex;
                 }
-                if (currentIndex > (range.location + range.length))
-                    range.length = currentIndex - range.location;
+                if (currentIndex > (range.location + range.length)) range.length = currentIndex - range.location;
             }
         }
     } else if (__CFStringIsGenderModifierCluster(&stringBuffer, range)) {
         if (range.location > 1) {
             CFIndex prev = range.location - 1;
             UTF32Char prevCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, prev);
-            // if prevChar is still not zwj, try again
-            if ((prevCharacter != ZERO_WIDTH_JOINER) && (prev > 1)) {
-                prev--;
-                prevCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, prev);
-            }
             if (prevCharacter == ZERO_WIDTH_JOINER) {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, prev - 1, type, bmpBitmap, csetType);
                 if (__CFStringIsGenderModifierBaseCluster(&stringBuffer, aCluster)) {
@@ -401,9 +386,7 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                 }
             }
         }
-    }
-#ifdef EXPERIMENTAL
-    else if (__CFStringIsProfessionBaseCluster(&stringBuffer, range)) {
+    } else if (__CFStringIsProfessionBaseCluster(&stringBuffer, range)) {
         CFIndex end = range.location + range.length - 1;
         if ((end + 1) < length) {
             UTF32Char endCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, end);
@@ -411,26 +394,19 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                 end++;
                 endCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, end);
             }
-            if (endCharacter == ZERO_WIDTH_JOINER) {
+            if (endCharacter == ZERO_WIDTH_JOINER)  {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, end + 1, type, bmpBitmap, csetType);
                 if (__CFStringIsProfessionModifierCluster(&stringBuffer, aCluster)) {
                     currentIndex = aCluster.location + aCluster.length;
-                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1)))
-                        --currentIndex;
+                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1))) --currentIndex;
                 }
-                if (currentIndex > (range.location + range.length))
-                    range.length = currentIndex - range.location;
+                if (currentIndex > (range.location + range.length)) range.length = currentIndex - range.location;
             }
         }
     } else if (__CFStringIsProfessionModifierCluster(&stringBuffer, range)) {
         if (range.location > 1) {
             CFIndex prev = range.location - 1;
             UTF32Char prevCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, prev);
-            // if prevChar is still not zwj, try again
-            if ((prevCharacter != ZERO_WIDTH_JOINER) && (prev > 1)) {
-                prev--;
-                prevCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, prev);
-            }
             if (prevCharacter == ZERO_WIDTH_JOINER) {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, prev - 1, type, bmpBitmap, csetType);
                 if (__CFStringIsProfessionBaseCluster(&stringBuffer, aCluster)) {
@@ -442,23 +418,18 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
                 }
             }
         }
-    }
-#endif
-    else {
+    } else {
         // range is zwj
         CFIndex end = range.location + range.length - 1;
         UTF32Char endCharacter = CFStringGetCharacterFromInlineBuffer(&stringBuffer, end);
-        if (((end + 1) < length) && (endCharacter == ZERO_WIDTH_JOINER)) {
+        if (((end + 1) < length) && ((endCharacter == ZERO_WIDTH_JOINER) || (endCharacter == WHITE_SPACE_CHARACTER))) {
             // Get cluster before and after zwj.  Range length of zwj cluster is always 1.
             CFRange rangeBeforeZWJ = _CFStringInlineBufferGetComposedRange(&stringBuffer, end - 1, type, bmpBitmap, csetType);
             aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, end + 1, type, bmpBitmap, csetType);
 
-            if (((__CFStringIsWavingWhiteFlagCluster(&stringBuffer, rangeBeforeZWJ)) && (__CFStringIsRainbowCluster(&stringBuffer, aCluster))) ||
-                ((__CFStringIsGenderModifierBaseCluster(&stringBuffer, rangeBeforeZWJ)) && (__CFStringIsGenderModifierCluster(&stringBuffer, aCluster)))
-#ifdef EXPERIMENTAL
-                || ((__CFStringIsProfessionBaseCluster(&stringBuffer, rangeBeforeZWJ)) && (__CFStringIsProfessionModifierCluster(&stringBuffer, aCluster)))
-#endif
-                ) {
+            if (((__CFStringIsWavingWhiteFlagCluster(&stringBuffer, rangeBeforeZWJ)) && (__CFStringIsRainbowCluster(&stringBuffer, aCluster)))
+                || ((__CFStringIsGenderModifierBaseCluster(&stringBuffer, rangeBeforeZWJ)) && (__CFStringIsGenderModifierCluster(&stringBuffer, aCluster)))
+                || ((__CFStringIsProfessionBaseCluster(&stringBuffer, rangeBeforeZWJ)) && (__CFStringIsProfessionModifierCluster(&stringBuffer, aCluster)))) {
                 range.location = rangeBeforeZWJ.location;
                 range.length += rangeBeforeZWJ.length + aCluster.length;
             }
@@ -498,21 +469,36 @@ extern "C" CFRange CFStringGetRangeOfCharacterClusterAtIndex(CFStringRef, CFInde
 
         if ((ZERO_WIDTH_JOINER == character) || __CFStringIsFamilySequenceCluster(&stringBuffer, _CFStringInlineBufferGetComposedRange(&stringBuffer, currentIndex, type, bmpBitmap, csetType))) {
 
-            if (ZERO_WIDTH_JOINER != character)
-                ++currentIndex; // move to the end of cluster
+            if (ZERO_WIDTH_JOINER != character) ++currentIndex; // move to the end of cluster
 
             while (((currentIndex + 1) < length) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex))) {
                 aCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, currentIndex + 1, type, bmpBitmap, csetType);
                 if ((__CFStringIsFamilySequenceCluster(&stringBuffer, aCluster))) {
                     currentIndex = aCluster.location + aCluster.length;
-                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1)))
-                        --currentIndex;
+                    if ((aCluster.length > 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, currentIndex - 1))) --currentIndex;
                 } else {
                     break;
                 }
             }
-            if (currentIndex > (range.location + range.length))
-                range.length = currentIndex - range.location;
+            if (currentIndex > (range.location + range.length)) range.length = currentIndex - range.location;
+        }
+    }
+
+    // Gather the final grapheme extends
+    CFRange finalCluster;
+    
+    // Backwards
+    if ((range.location > 0) && (range.length == 1) && (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, range.location))) {
+        finalCluster = _CFStringInlineBufferGetComposedRange(&stringBuffer, range.location - 1, type, bmpBitmap, csetType);
+        if (range.location == (finalCluster.location + finalCluster.length)) {
+            range = finalCluster;
+            ++range.length;
+        }
+    }
+    // Forwards
+    if ((range.location + range.length) < length) {
+        if (ZERO_WIDTH_JOINER == CFStringGetCharacterFromInlineBuffer(&stringBuffer, range.location + range.length)) {
+            ++range.length;
         }
     }
 
